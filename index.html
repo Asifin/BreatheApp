@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathing Timer</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease;
+	    background-image : url('bgbreath.jpg');
+        }
+
+        .container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, var(--window-opacity, 0.85));
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            backdrop-filter: blur(5px);
+            transition: background-color 0.3s ease;
+        }
+
+        .current-time {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+
+        .phase-display {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            height: 30px;
+        }
+
+        .circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #e1f5fe;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 1s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #stopBtn {
+            background-color: #f44336;
+        }
+
+        #stopBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        #customizeBtn {
+            background-color: #2196F3;
+        }
+
+        #customizeBtn:hover {
+            background-color: #0b7dda;
+        }
+
+        .customize-container {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(249, 249, 249, 0.9);
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .customize-container.show {
+            display: block;
+        }
+
+        .input-group {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group label {
+            margin-right: 10px;
+            flex: 1;
+            text-align: left;
+        }
+
+        .input-group input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .cycles-display {
+            margin-top: 15px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .inhale {
+            background-color: #e1f5fe;
+            color: #0277bd;
+        }
+
+        .hold {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+
+        .exhale {
+            background-color: #f1f8e9;
+            color: #558b2f;
+        }
+
+        .background-options {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+
+        .background-options label {
+            display: block;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        #customBgUpload {
+            display: none;
+        }
+
+        .upload-label {
+            display: block;
+            background-color: #607d8b;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        .upload-label:hover {
+            background-color: #546e7a;
+        }
+
+        .transparency-control {
+            margin-top: 15px;
+        }
+
+        .transparency-control label {
+            display: block;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .transparency-control input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .transparency-value {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="current-time" id="currentTime"></div>
+        <h1>Breathing Timer</h1>
+        
+        <div class="phase-display" id="phaseDisplay">Ready</div>
+        <div class="circle" id="breathingCircle">
+            <div class="timer-display" id="timerDisplay">--</div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="customizeBtn">Customize</button>
+        </div>
+        
+        <div class="customize-container" id="customizeContainer">
+            <div class="input-group">
+                <label for="inhaleTime">Inhale (sec):</label>
+                <input type="number" id="inhaleTime" min="1" max="60" value="4">
+            </div>
+            <div class="input-group">
+                <label for="holdAfterInhale">Hold after inhale (sec):</label>
+                <input type="number" id="holdAfterInhale" min="0" max="60" value="1">
+            </div>
+            <div class="input-group">
+                <label for="exhaleTime">Exhale (sec):</label>
+                <input type="number" id="exhaleTime" min="1" max="60" value="6">
+            </div>
+            <div class="input-group">
+                <label for="holdAfterExhale">Hold after exhale (sec):</label>
+                <input type="number" id="holdAfterExhale" min="0" max="60" value="1">
+            </div>
+            <div class="input-group">
+                <label for="cycles">Cycles:</label>
+                <input type="number" id="cycles" min="1" max="100" value="5">
+            </div>
+            
+            <div class="background-options">
+                <label for="customBgUpload">Background Image:</label>
+                <input type="file" id="customBgUpload" accept="image/*">
+                <label for="customBgUpload" class="upload-label">Upload Custom Background</label>
+                
+                <div class="transparency-control">
+                    <label for="windowTransparency">Window Transparency: <span class="transparency-value" id="transparencyValue">85%</span></label>
+                    <input type="range" id="windowTransparency" min="10" max="100" value="85">
+                </div>
+                
+                <button id="previewBg">Preview Changes</button>
+            </div>
+            
+            <button id="saveSettings">Save Settings</button>
+        </div>
+        
+        <div class="cycles-display" id="cyclesDisplay">Cycles remaining: --</div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const currentTimeEl = document.getElementById('currentTime');
+        const timerDisplayEl = document.getElementById('timerDisplay');
+        const phaseDisplayEl = document.getElementById('phaseDisplay');
+        const breathingCircleEl = document.getElementById('breathingCircle');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const customizeBtn = document.getElementById('customizeBtn');
+        const customizeContainer = document.getElementById('customizeContainer');
+        const cyclesDisplayEl = document.getElementById('cyclesDisplay');
+        
+        // Settings input elements
+        const inhaleTimeInput = document.getElementById('inhaleTime');
+        const holdAfterInhaleInput = document.getElementById('holdAfterInhale');
+        const exhaleTimeInput = document.getElementById('exhaleTime');
+        const holdAfterExhaleInput = document.getElementById('holdAfterExhale');
+        const cyclesInput = document.getElementById('cycles');
+        const saveSettingsBtn = document.getElementById('saveSettings');
+        
+        // Background elements
+        const customBgUpload = document.getElementById('customBgUpload');
+        const previewBgBtn = document.getElementById('previewBg');
+        const body = document.body;
+        const container = document.querySelector('.container');
+        
+        // Transparency control
+        const windowTransparency = document.getElementById('windowTransparency');
+        const transparencyValue = document.getElementById('transparencyValue');
+        
+        // Timer variables
+        let timer;
+        let currentTime;
+        let currentPhase;
+        let remainingCycles;
+        
+        // Default settings
+        let settings = {
+            inhaleTime: 4,
+            holdAfterInhale: 1,
+            exhaleTime: 6,
+            holdAfterExhale: 1,
+            cycles: 5,
+            background: {
+                customUrl: ''
+            },
+            windowOpacity: 0.44
+        };
+
+        // Initialize
+        function init() {
+            // Apply saved settings
+            container.style.setProperty('--window-opacity', settings.windowOpacity);
+            transparencyValue.textContent = `${Math.round(settings.windowOpacity * 100)}%`;
+            windowTransparency.value = settings.windowOpacity * 100;
+            
+            if (settings.background.customUrl) {
+                body.style.backgroundImage = `url(${settings.background.customUrl})`;
+            }
+        }
+        
+        // Update current time display
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            currentTimeEl.textContent = `Current Time: ${timeString}`;
+        }
+        
+        // Initialize current time and update every second
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
+        // Toggle customize container
+        customizeBtn.addEventListener('click', () => {
+            customizeContainer.classList.toggle('show');
+            
+            // Populate inputs with current settings
+            inhaleTimeInput.value = settings.inhaleTime;
+            holdAfterInhaleInput.value = settings.holdAfterInhale;
+            exhaleTimeInput.value = settings.exhaleTime;
+            holdAfterExhaleInput.value = settings.holdAfterExhale;
+            cyclesInput.value = settings.cycles;
+            windowTransparency.value = settings.windowOpacity * 100;
+            transparencyValue.textContent = `${Math.round(settings.windowOpacity * 100)}%`;
+        });
+        
+        // Handle custom background upload
+        customBgUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    settings.background.customUrl = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Update transparency in real-time
+        windowTransparency.addEventListener('input', function() {
+            const opacity = this.value / 100;
+            transparencyValue.textContent = `${this.value}%`;
+            container.style.setProperty('--window-opacity', opacity);
+        });
+        
+        // Preview changes
+        previewBgBtn.addEventListener('click', function() {
+            if (settings.background.customUrl) {
+                body.style.backgroundImage = `url(${settings.background.customUrl})`;
+            }
+        });
+        
+        // Save settings
+        saveSettingsBtn.addEventListener('click', () => {
+            settings = {
+                inhaleTime: parseInt(inhaleTimeInput.value),
+                holdAfterInhale: parseInt(holdAfterInhaleInput.value),
+                exhaleTime: parseInt(exhaleTimeInput.value),
+                holdAfterExhale: parseInt(holdAfterExhaleInput.value),
+                cycles: parseInt(cyclesInput.value),
+                background: {
+                    customUrl: settings.background.customUrl
+                },
+                windowOpacity: windowTransparency.value / 100
+            };
+            
+            // Apply settings
+            container.style.setProperty('--window-opacity', settings.windowOpacity);
+            if (settings.background.customUrl) {
+                body.style.backgroundImage = `url(${settings.background.customUrl})`;
+            }
+            
+            customizeContainer.classList.remove('show');
+        });
+        
+        // ... (keep all your existing timer functions unchanged) ...
+        // Start the breathing timer
+        startBtn.addEventListener('click', () => {
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            remainingCycles = settings.cycles;
+            updateCyclesDisplay();
+            
+            // Start with inhale
+            startPhase('inhale', settings.inhaleTime);
+        });
+        
+        // Stop the breathing timer
+        stopBtn.addEventListener('click', () => {
+            clearTimeout(timer);
+            resetTimer();
+        });
+        
+        // Start a specific phase
+        function startPhase(phase, duration) {
+            currentPhase = phase;
+            currentTime = duration;
+            
+            // Update display
+            timerDisplayEl.textContent = currentTime;
+            phaseDisplayEl.textContent = getPhaseName(phase);
+            
+            // Update circle appearance based on phase
+            breathingCircleEl.className = 'circle';
+            breathingCircleEl.classList.add(phase);
+            
+            // Start countdown
+            timer = setInterval(() => {
+                currentTime--;
+                timerDisplayEl.textContent = currentTime;
+                
+                if (currentTime <= 0) {
+                    clearInterval(timer);
+                    nextPhase();
+                }
+            }, 1000);
+        }
+        
+        // Get display name for phase
+        function getPhaseName(phase) {
+            const names = {
+                inhale: 'Breathe In',
+                holdAfterInhale: 'Hold',
+                exhale: 'Breathe Out',
+                holdAfterExhale: 'Hold'
+            };
+            return names[phase];
+        }
+        
+        // Move to next phase
+        function nextPhase() {
+            switch (currentPhase) {
+                case 'inhale':
+                    if (settings.holdAfterInhale > 0) {
+                        startPhase('holdAfterInhale', settings.holdAfterInhale);
+                    } else {
+                        startPhase('exhale', settings.exhaleTime);
+                    }
+                    break;
+                case 'holdAfterInhale':
+                    startPhase('exhale', settings.exhaleTime);
+                    break;
+                case 'exhale':
+                    if (settings.holdAfterExhale > 0) {
+                        startPhase('holdAfterExhale', settings.holdAfterExhale);
+                    } else {
+                        completeCycle();
+                    }
+                    break;
+                case 'holdAfterExhale':
+                    completeCycle();
+                    break;
+            }
+        }
+        
+        // Complete one full cycle
+        function completeCycle() {
+            remainingCycles--;
+            updateCyclesDisplay();
+            
+            if (remainingCycles > 0) {
+                startPhase('inhale', settings.inhaleTime);
+            } else {
+                resetTimer();
+            }
+        }
+        
+        // Update cycles display
+        function updateCyclesDisplay() {
+            cyclesDisplayEl.textContent = `Cycles remaining: ${remainingCycles}`;
+        }
+        
+        // Reset timer to initial state
+        function resetTimer() {
+            clearTimeout(timer);
+            timerDisplayEl.textContent = '--';
+            phaseDisplayEl.textContent = 'Ready';
+            breathingCircleEl.className = 'circle';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            cyclesDisplayEl.textContent = 'Cycles remaining: --';
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
